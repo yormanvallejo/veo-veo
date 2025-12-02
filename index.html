@@ -1,25 +1,41 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Veo Veo Digital</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;600&display=swap" rel="stylesheet">
-    <style>
-      body {
-        font-family: 'Fredoka', sans-serif;
-        background-color: #FEF9C3; /* Yellow tint from book cover */
-      }
-      .animate-bounce-small {
-        animation: bounce 0.5s infinite alternate;
-      }
-      @keyframes bounce {
-        from { transform: translateY(0); }
-        to { transform: translateY(-5px); }
-      }
-    </style>
-  <script type="importmap">
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Veo Veo Digital</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- React & ReactDOM -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  
+  <!-- Babel for JSX -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;600&display=swap" rel="stylesheet">
+  
+  <style>
+    body {
+      font-family: 'Fredoka', sans-serif;
+      background-color: #FEF9C3; /* Yellow tint */
+      overscroll-behavior: none;
+    }
+    .animate-bounce-small {
+      animation: bounce 0.5s infinite alternate;
+    }
+    @keyframes bounce {
+      from { transform: translateY(0); }
+      to { transform: translateY(-5px); }
+    }
+    .touch-none {
+        touch-action: none;
+    }
+  </style>
+<script type="importmap">
 {
   "imports": {
     "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
@@ -31,9 +47,1795 @@
 </script>
 <link rel="stylesheet" href="/index.css">
 </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="./index.tsx"></script>
-  <script type="module" src="/index.tsx"></script>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef, useCallback } = React;
+
+    // --- ICONS (Inline SVGs to remove external dependencies) ---
+    const Icons = {
+        Star: (props) => <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>,
+        Lock: (props) => <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>,
+        Play: (props) => <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>,
+        RotateCcw: (props) => <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 4v6h6"></path><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>,
+        Home: (props) => <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>,
+        PenTool: (props) => <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path><path d="M2 2l7.586 7.586"></path><circle cx="11" cy="11" r="2"></circle></svg>,
+        Volume2: (props) => <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>,
+        Circle: (props) => <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle></svg>,
+        Square: (props) => <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>,
+        Triangle: (props) => <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path></svg>,
+        Heart: (props) => <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>,
+        Diamond: (props) => <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 12l10 10 10-10L12 2z"></path></svg>,
+        Flower: (props) => <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a3 3 0 0 0-3 3v2a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path><path d="M19 9a3 3 0 0 0-3-3h-2a3 3 0 0 0 0 6h2a3 3 0 0 0 3-3z"></path><path d="M12 22a3 3 0 0 0 3-3v-2a3 3 0 0 0-6 0v2a3 3 0 0 0 3 3z"></path><path d="M5 9a3 3 0 0 0 3 3h2a3 3 0 0 0 0-6H8a3 3 0 0 0-3 3z"></path><circle cx="12" cy="12" r="2"></circle></svg>,
+        Plus: (props) => <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>,
+        X: (props) => <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>,
+        Hexagon: (props) => <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>,
+        Moon: (props) => <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>,
+        Sun: (props) => <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>,
+        Rat: (props) => <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a4 4 0 0 1 4 4v14a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2V6a4 4 0 0 1 4-4Z"></path><path d="M16 6h4a2 2 0 0 1 0 4h-4"></path><path d="M8 6H4a2 2 0 0 0 0 4h4"></path></svg>,
+        Cookie: (props) => <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a10 10 0 0 1 10 10"></path></svg>,
+        ChevronUp: (props) => <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>,
+        ChevronDown: (props) => <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>,
+        ChevronLeft: (props) => <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>,
+        ChevronRight: (props) => <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>,
+        RefreshCw: (props) => <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>,
+        CheckCircle2: (props) => <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9 12l2 2 4-4"></path></svg>,
+        XCircle: (props) => <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>,
+    };
+
+    // --- TYPES & DATA ---
+    const GameType = {
+        PATTERN: 'PATTERN',
+        MAZE: 'MAZE',
+        COUNTING: 'COUNTING',
+        SELECTION: 'SELECTION',
+        GRID_COPY: 'GRID_COPY',
+    };
+
+    const LEVELS = [
+        {
+            id: 1,
+            type: GameType.PATTERN,
+            title: "Series de Colores",
+            instruction: "Copia la serie de colores y complétala.",
+            patternTasks: [
+                {
+                    id: 't1',
+                    correctOptionId: 'opt2',
+                    sequence: [
+                        { id: '1', color: 'bg-green-500', shape: 'square' },
+                        { id: '2', color: 'bg-yellow-400', shape: 'circle' },
+                        { id: '3', color: 'bg-green-500', shape: 'square' },
+                        { id: '4', color: 'bg-yellow-400', shape: 'circle' },
+                        { id: '5', color: 'bg-green-500', shape: 'square' },
+                        { id: 'q', color: 'bg-gray-200', shape: 'circle' },
+                    ],
+                    options: [
+                        { id: 'opt1', color: 'bg-red-500', shape: 'circle' },
+                        { id: 'opt2', color: 'bg-yellow-400', shape: 'circle' },
+                        { id: 'opt3', color: 'bg-blue-500', shape: 'square' },
+                    ]
+                },
+                {
+                    id: 't2',
+                    correctOptionId: 'opt1',
+                    sequence: [
+                        { id: '1', color: 'bg-blue-500', shape: 'triangle' },
+                        { id: '2', color: 'bg-red-500', shape: 'square' },
+                        { id: '3', color: 'bg-blue-500', shape: 'triangle' },
+                        { id: '4', color: 'bg-red-500', shape: 'square' },
+                        { id: '5', color: 'bg-blue-500', shape: 'triangle' },
+                        { id: 'q', color: 'bg-gray-200', shape: 'square' },
+                    ],
+                    options: [
+                        { id: 'opt1', color: 'bg-red-500', shape: 'square' },
+                        { id: 'opt2', color: 'bg-blue-500', shape: 'triangle' },
+                        { id: 'opt3', color: 'bg-yellow-400', shape: 'square' },
+                    ]
+                },
+                {
+                    id: 't3',
+                    correctOptionId: 'opt3',
+                    sequence: [
+                        { id: '1', color: 'bg-purple-500', shape: 'circle' },
+                        { id: '2', color: 'bg-orange-500', shape: 'diamond' },
+                        { id: '3', color: 'bg-purple-500', shape: 'circle' },
+                        { id: '4', color: 'bg-orange-500', shape: 'diamond' },
+                        { id: '5', color: 'bg-purple-500', shape: 'circle' },
+                        { id: 'q', color: 'bg-gray-200', shape: 'diamond' },
+                    ],
+                    options: [
+                        { id: 'opt1', color: 'bg-purple-500', shape: 'circle' },
+                        { id: 'opt2', color: 'bg-green-500', shape: 'diamond' },
+                        { id: 'opt3', color: 'bg-orange-500', shape: 'diamond' },
+                    ]
+                },
+                {
+                    id: 't4',
+                    correctOptionId: 'opt1',
+                    sequence: [
+                        { id: '1', color: 'bg-pink-500', shape: 'heart' },
+                        { id: '2', color: 'bg-pink-500', shape: 'heart' },
+                        { id: '3', color: 'bg-blue-400', shape: 'star' },
+                        { id: '4', color: 'bg-pink-500', shape: 'heart' },
+                        { id: '5', color: 'bg-pink-500', shape: 'heart' },
+                        { id: 'q', color: 'bg-gray-200', shape: 'star' },
+                    ],
+                    options: [
+                        { id: 'opt1', color: 'bg-blue-400', shape: 'star' },
+                        { id: 'opt2', color: 'bg-pink-500', shape: 'heart' },
+                        { id: 'opt3', color: 'bg-yellow-400', shape: 'star' },
+                    ]
+                }
+            ]
+        },
+        {
+            id: 2,
+            type: GameType.SELECTION,
+            title: "Triángulos y Formas",
+            instruction: "Encuentra y selecciona las figuras indicadas.",
+            selectionTasks: [
+                {
+                    id: 't1',
+                    instructionOverride: "Encuentra todos los triángulos azules.",
+                    items: [
+                        { id: '1', icon: 'triangle', color: 'text-yellow-400', isCorrect: false },
+                        { id: '2', icon: 'triangle', color: 'text-blue-500', isCorrect: true },
+                        { id: '3', icon: 'square', color: 'text-blue-500', isCorrect: false },
+                        { id: '4', icon: 'triangle', color: 'text-red-500', isCorrect: false },
+                        { id: '5', icon: 'triangle', color: 'text-blue-500', isCorrect: true },
+                        { id: '6', icon: 'circle', color: 'text-yellow-400', isCorrect: false },
+                    ]
+                },
+                {
+                    id: 't2',
+                    instructionOverride: "Encuentra todos los cuadrados rojos.",
+                    items: [
+                        { id: '1', icon: 'square', color: 'text-red-500', isCorrect: true },
+                        { id: '2', icon: 'triangle', color: 'text-red-500', isCorrect: false },
+                        { id: '3', icon: 'square', color: 'text-blue-500', isCorrect: false },
+                        { id: '4', icon: 'square', color: 'text-red-500', isCorrect: true },
+                        { id: '5', icon: 'circle', color: 'text-red-500', isCorrect: false },
+                        { id: '6', icon: 'square', color: 'text-green-500', isCorrect: false },
+                    ]
+                },
+                {
+                    id: 't3',
+                    instructionOverride: "Encuentra todos los círculos verdes.",
+                    items: [
+                        { id: '1', icon: 'circle', color: 'text-green-500', isCorrect: true },
+                        { id: '2', icon: 'circle', color: 'text-blue-500', isCorrect: false },
+                        { id: '3', icon: 'square', color: 'text-green-500', isCorrect: false },
+                        { id: '4', icon: 'triangle', color: 'text-green-500', isCorrect: false },
+                        { id: '5', icon: 'circle', color: 'text-green-500', isCorrect: true },
+                        { id: '6', icon: 'circle', color: 'text-red-500', isCorrect: false },
+                    ]
+                },
+                {
+                    id: 't4',
+                    instructionOverride: "Encuentra todos los corazones rosas.",
+                    items: [
+                        { id: '1', icon: 'heart', color: 'text-pink-500', isCorrect: true },
+                        { id: '2', icon: 'star', color: 'text-pink-500', isCorrect: false },
+                        { id: '3', icon: 'heart', color: 'text-purple-500', isCorrect: false },
+                        { id: '4', icon: 'heart', color: 'text-pink-500', isCorrect: true },
+                        { id: '5', icon: 'heart', color: 'text-pink-500', isCorrect: true },
+                        { id: '6', icon: 'circle', color: 'text-pink-500', isCorrect: false },
+                    ]
+                }
+            ]
+        },
+        {
+            id: 3,
+            type: GameType.MAZE,
+            title: "El Laberinto",
+            instruction: "Encuentra el camino hacia la meta.",
+            mazeTasks: [
+                {
+                    id: 'm1',
+                    grid: {
+                        rows: 5,
+                        cols: 5,
+                        start: { r: 0, c: 0 },
+                        layout: [
+                            [2, 0, 1, 1, 1],
+                            [1, 0, 0, 0, 1],
+                            [1, 1, 1, 0, 1],
+                            [1, 3, 0, 0, 1],
+                            [1, 1, 1, 1, 1]
+                        ]
+                    }
+                },
+                {
+                    id: 'm2',
+                    grid: {
+                        rows: 6,
+                        cols: 6,
+                        start: { r: 5, c: 0 },
+                        layout: [
+                            [1, 3, 0, 0, 0, 1],
+                            [1, 1, 1, 1, 0, 1],
+                            [0, 0, 0, 0, 0, 1],
+                            [0, 1, 1, 1, 0, 1],
+                            [0, 1, 0, 0, 0, 1],
+                            [2, 0, 0, 1, 1, 1]
+                        ]
+                    }
+                },
+                {
+                    id: 'm3',
+                    grid: {
+                        rows: 5,
+                        cols: 5,
+                        start: { r: 0, c: 4 },
+                        layout: [
+                            [1, 1, 1, 1, 2],
+                            [1, 0, 0, 0, 0],
+                            [1, 0, 1, 1, 1],
+                            [1, 0, 0, 0, 3],
+                            [1, 1, 1, 1, 1]
+                        ]
+                    }
+                },
+                {
+                    id: 'm4',
+                    grid: {
+                        rows: 6,
+                        cols: 6,
+                        start: { r: 0, c: 0 },
+                        layout: [
+                            [2, 0, 0, 1, 1, 1],
+                            [1, 1, 0, 1, 0, 0],
+                            [1, 0, 0, 0, 0, 1],
+                            [1, 0, 1, 1, 1, 1],
+                            [1, 0, 0, 0, 0, 3],
+                            [1, 1, 1, 1, 1, 1]
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            id: 4,
+            type: GameType.PATTERN,
+            title: "Letras y Colores",
+            instruction: "Copia la serie de letras.",
+            patternTasks: [
+                {
+                    id: 't1',
+                    correctOptionId: 'opt1',
+                    sequence: [
+                        { id: '1', color: 'bg-blue-200', shape: 'square', content: 'D' },
+                        { id: '2', color: 'bg-white', shape: 'square', content: 'd' },
+                        { id: '3', color: 'bg-blue-200', shape: 'square', content: 'D' },
+                        { id: '4', color: 'bg-white', shape: 'square', content: 'd' },
+                        { id: 'q', color: 'bg-gray-100', shape: 'square', content: '?' },
+                    ],
+                    options: [
+                        { id: 'opt1', color: 'bg-blue-200', shape: 'square', content: 'D' },
+                        { id: 'opt2', color: 'bg-white', shape: 'square', content: 'd' },
+                        { id: 'opt3', color: 'bg-red-200', shape: 'square', content: 'P' },
+                    ]
+                },
+                {
+                    id: 't2',
+                    correctOptionId: 'opt2',
+                    sequence: [
+                        { id: '1', color: 'bg-pink-200', shape: 'square', content: 'E' },
+                        { id: '2', color: 'bg-white', shape: 'square', content: 'e' },
+                        { id: '3', color: 'bg-pink-200', shape: 'square', content: 'E' },
+                        { id: '4', color: 'bg-white', shape: 'square', content: 'e' },
+                        { id: 'q', color: 'bg-gray-100', shape: 'square', content: '?' },
+                    ],
+                    options: [
+                        { id: 'opt1', color: 'bg-pink-200', shape: 'square', content: 'e' },
+                        { id: 'opt2', color: 'bg-pink-200', shape: 'square', content: 'E' },
+                        { id: 'opt3', color: 'bg-white', shape: 'square', content: 'E' },
+                    ]
+                },
+                {
+                    id: 't3',
+                    correctOptionId: 'opt3',
+                    sequence: [
+                        { id: '1', color: 'bg-orange-200', shape: 'square', content: 'F' },
+                        { id: '2', color: 'bg-white', shape: 'square', content: 'o' },
+                        { id: '3', color: 'bg-orange-200', shape: 'square', content: 'F' },
+                        { id: '4', color: 'bg-white', shape: 'square', content: 'o' },
+                        { id: 'q', color: 'bg-gray-100', shape: 'square', content: '?' },
+                    ],
+                    options: [
+                        { id: 'opt1', color: 'bg-white', shape: 'square', content: 'F' },
+                        { id: 'opt2', color: 'bg-orange-200', shape: 'square', content: 'o' },
+                        { id: 'opt3', color: 'bg-orange-200', shape: 'square', content: 'F' },
+                    ]
+                },
+                {
+                    id: 't4',
+                    correctOptionId: 'opt2',
+                    sequence: [
+                        { id: '1', color: 'bg-purple-200', shape: 'square', content: 'M' },
+                        { id: '2', color: 'bg-white', shape: 'square', content: 'm' },
+                        { id: '3', color: 'bg-purple-200', shape: 'square', content: 'M' },
+                        { id: '4', color: 'bg-white', shape: 'square', content: 'm' },
+                        { id: 'q', color: 'bg-gray-100', shape: 'square', content: '?' },
+                    ],
+                    options: [
+                        { id: 'opt1', color: 'bg-white', shape: 'square', content: 'm' },
+                        { id: 'opt2', color: 'bg-purple-200', shape: 'square', content: 'M' },
+                        { id: 'opt3', color: 'bg-green-200', shape: 'square', content: 'M' },
+                    ]
+                }
+            ]
+        },
+        {
+            id: 5,
+            type: GameType.SELECTION,
+            title: "Tamaños",
+            instruction: "Selecciona los globos según su tamaño.",
+            selectionTasks: [
+                {
+                    id: 't1',
+                    instructionOverride: "Selecciona los globos grandes.",
+                    items: [
+                        { id: '1', icon: 'balloon', color: 'text-red-500', isCorrect: false, scale: 0.8 },
+                        { id: '2', icon: 'balloon', color: 'text-green-500', isCorrect: false, scale: 0.5 },
+                        { id: '3', icon: 'balloon', color: 'text-blue-500', isCorrect: true, scale: 1.5 },
+                        { id: '4', icon: 'balloon', color: 'text-yellow-500', isCorrect: false, scale: 1.0 },
+                        { id: '5', icon: 'balloon', color: 'text-pink-500', isCorrect: true, scale: 1.5 },
+                    ]
+                },
+                {
+                    id: 't2',
+                    instructionOverride: "Selecciona los globos pequeños.",
+                    items: [
+                        { id: '1', icon: 'balloon', color: 'text-red-500', isCorrect: true, scale: 0.5 },
+                        { id: '2', icon: 'balloon', color: 'text-green-500', isCorrect: true, scale: 0.6 },
+                        { id: '3', icon: 'balloon', color: 'text-blue-500', isCorrect: false, scale: 1.5 },
+                        { id: '4', icon: 'balloon', color: 'text-yellow-500', isCorrect: false, scale: 1.2 },
+                    ]
+                },
+                {
+                    id: 't3',
+                    instructionOverride: "Selecciona las estrellas grandes.",
+                    items: [
+                        { id: '1', icon: 'star', color: 'text-yellow-400', isCorrect: true, scale: 1.5 },
+                        { id: '2', icon: 'star', color: 'text-yellow-400', isCorrect: false, scale: 0.7 },
+                        { id: '3', icon: 'star', color: 'text-yellow-400', isCorrect: false, scale: 0.6 },
+                        { id: '4', icon: 'star', color: 'text-yellow-400', isCorrect: true, scale: 1.5 },
+                    ]
+                },
+                {
+                    id: 't4',
+                    instructionOverride: "Selecciona los círculos medianos.",
+                    items: [
+                        { id: '1', icon: 'circle', color: 'text-blue-400', isCorrect: true, scale: 1.0 },
+                        { id: '2', icon: 'circle', color: 'text-blue-400', isCorrect: false, scale: 0.5 },
+                        { id: '3', icon: 'circle', color: 'text-blue-400', isCorrect: false, scale: 1.6 },
+                        { id: '4', icon: 'circle', color: 'text-blue-400', isCorrect: true, scale: 1.0 },
+                    ]
+                }
+            ]
+        },
+        {
+            id: 6,
+            type: GameType.PATTERN,
+            title: "Formas Geométricas",
+            instruction: "Copia la serie de formas.",
+            patternTasks: [
+                {
+                    id: 't1',
+                    correctOptionId: 'opt2',
+                    sequence: [
+                        { id: '1', color: 'bg-transparent', shape: 'diamond' },
+                        { id: '2', color: 'bg-transparent', shape: 'diamond' },
+                        { id: '3', color: 'bg-transparent', shape: 'diamond' },
+                        { id: 'q', color: 'bg-gray-100', shape: 'square' }, 
+                    ],
+                    options: [
+                        { id: 'opt1', color: 'bg-transparent', shape: 'circle' },
+                        { id: 'opt2', color: 'bg-transparent', shape: 'diamond' },
+                        { id: 'opt3', color: 'bg-transparent', shape: 'star' },
+                    ]
+                },
+                {
+                    id: 't2',
+                    correctOptionId: 'opt1',
+                    sequence: [
+                        { id: '1', color: 'text-blue-500', shape: 'cross' },
+                        { id: '2', color: 'text-green-500', shape: 'plus' },
+                        { id: '3', color: 'text-blue-500', shape: 'cross' },
+                        { id: '4', color: 'text-green-500', shape: 'plus' },
+                        { id: 'q', color: 'bg-gray-100', shape: 'square' }, 
+                    ],
+                    options: [
+                        { id: 'opt1', color: 'text-blue-500', shape: 'cross' },
+                        { id: 'opt2', color: 'text-green-500', shape: 'plus' },
+                        { id: 'opt3', color: 'text-blue-500', shape: 'plus' },
+                    ]
+                },
+                {
+                    id: 't3',
+                    correctOptionId: 'opt3',
+                    sequence: [
+                        { id: '1', color: 'text-purple-500', shape: 'hexagon' },
+                        { id: '2', color: 'text-yellow-500', shape: 'star' },
+                        { id: '3', color: 'text-purple-500', shape: 'hexagon' },
+                        { id: '4', color: 'text-yellow-500', shape: 'star' },
+                        { id: 'q', color: 'bg-gray-100', shape: 'square' }, 
+                    ],
+                    options: [
+                        { id: 'opt1', color: 'text-purple-500', shape: 'star' },
+                        { id: 'opt2', color: 'text-yellow-500', shape: 'hexagon' },
+                        { id: 'opt3', color: 'text-purple-500', shape: 'hexagon' },
+                    ]
+                },
+                {
+                    id: 't4',
+                    correctOptionId: 'opt2',
+                    sequence: [
+                        { id: '1', color: 'text-orange-500', shape: 'moon' },
+                        { id: '2', color: 'text-yellow-500', shape: 'sun' },
+                        { id: '3', color: 'text-orange-500', shape: 'moon' },
+                        { id: '4', color: 'text-yellow-500', shape: 'sun' },
+                        { id: 'q', color: 'bg-gray-100', shape: 'square' }, 
+                    ],
+                    options: [
+                        { id: 'opt1', color: 'text-yellow-500', shape: 'sun' },
+                        { id: 'opt2', color: 'text-orange-500', shape: 'moon' },
+                        { id: 'opt3', color: 'text-blue-500', shape: 'star' },
+                    ]
+                }
+            ]
+        },
+        {
+            id: 7,
+            type: GameType.PATTERN,
+            title: "Copia la Serie",
+            instruction: "Copia la serie según el modelo.",
+            patternTasks: [
+                {
+                    id: 't1',
+                    correctOptionId: 'opt2',
+                    sequence: [
+                        { id: '1', color: 'text-blue-500', shape: 'diagonal' },
+                        { id: '2', color: 'text-blue-500', shape: 'dash' },
+                        { id: '3', color: 'text-blue-500', shape: 'diagonal' },
+                        { id: '4', color: 'text-blue-500', shape: 'dash' },
+                        { id: '5', color: 'text-blue-500', shape: 'diagonal' },
+                        { id: 'q', color: 'bg-gray-100', shape: 'square' }, 
+                    ],
+                    options: [
+                        { id: 'opt1', color: 'text-blue-500', shape: 'diagonal' },
+                        { id: 'opt2', color: 'text-blue-500', shape: 'dash' },
+                        { id: 'opt3', color: 'text-blue-500', shape: 'square' },
+                    ]
+                },
+                {
+                    id: 't2',
+                    correctOptionId: 'opt3',
+                    sequence: [
+                        { id: '1', color: 'text-green-500', shape: 'diagonal' },
+                        { id: '2', color: 'text-orange-500', shape: 'dash' },
+                        { id: '3', color: 'text-green-500', shape: 'diagonal' },
+                        { id: '4', color: 'text-orange-500', shape: 'dash' },
+                        { id: '5', color: 'text-green-500', shape: 'diagonal' },
+                        { id: 'q', color: 'bg-gray-100', shape: 'square' }, 
+                    ],
+                    options: [
+                        { id: 'opt1', color: 'text-green-500', shape: 'dash' },
+                        { id: 'opt2', color: 'text-orange-500', shape: 'diagonal' },
+                        { id: 'opt3', color: 'text-orange-500', shape: 'dash' },
+                    ]
+                },
+                {
+                    id: 't3',
+                    correctOptionId: 'opt1',
+                    sequence: [
+                        { id: '1', color: 'text-red-500', shape: 'dash' },
+                        { id: '2', color: 'text-red-500', shape: 'dash' },
+                        { id: '3', color: 'text-red-500', shape: 'diagonal' },
+                        { id: '4', color: 'text-red-500', shape: 'dash' },
+                        { id: '5', color: 'text-red-500', shape: 'dash' },
+                        { id: 'q', color: 'bg-gray-100', shape: 'square' }, 
+                    ],
+                    options: [
+                        { id: 'opt1', color: 'text-red-500', shape: 'diagonal' },
+                        { id: 'opt2', color: 'text-red-500', shape: 'dash' },
+                        { id: 'opt3', color: 'text-blue-500', shape: 'diagonal' },
+                    ]
+                },
+                {
+                    id: 't4',
+                    correctOptionId: 'opt1',
+                    sequence: [
+                        { id: '1', color: 'text-purple-500', shape: 'diagonal' },
+                        { id: '2', color: 'text-purple-500', shape: 'diagonal' },
+                        { id: '3', color: 'text-purple-500', shape: 'dash' },
+                        { id: '4', color: 'text-purple-500', shape: 'diagonal' },
+                        { id: '5', color: 'text-purple-500', shape: 'diagonal' },
+                        { id: 'q', color: 'bg-gray-100', shape: 'square' }, 
+                    ],
+                    options: [
+                        { id: 'opt1', color: 'text-purple-500', shape: 'dash' },
+                        { id: 'opt2', color: 'text-purple-500', shape: 'diagonal' },
+                        { id: 'opt3', color: 'text-purple-500', shape: 'square' },
+                    ]
+                }
+            ]
+        },
+        {
+            id: 8,
+            type: GameType.PATTERN,
+            title: "Botones e Hilos",
+            instruction: "Copia la serie de botones.",
+            patternTasks: [
+                {
+                    id: 't1',
+                    correctOptionId: 'opt2', // Up Down Up Down -> Up
+                    sequence: [
+                        { id: '1', color: 'text-pink-500', shape: 'button-round-up' },
+                        { id: '2', color: 'text-pink-500', shape: 'button-round-down' },
+                        { id: '3', color: 'text-pink-500', shape: 'button-round-up' },
+                        { id: '4', color: 'text-pink-500', shape: 'button-round-down' },
+                        { id: 'q', color: 'bg-gray-100', shape: 'square' },
+                    ],
+                    options: [
+                        { id: 'opt1', color: 'text-pink-500', shape: 'button-round-down' },
+                        { id: 'opt2', color: 'text-pink-500', shape: 'button-round-up' },
+                        { id: 'opt3', color: 'text-pink-500', shape: 'button-round' },
+                    ]
+                },
+                {
+                    id: 't2',
+                    correctOptionId: 'opt1',
+                    sequence: [
+                        { id: '1', color: 'text-blue-500', shape: 'button-oval' },
+                        { id: '2', color: 'text-green-500', shape: 'button-square' },
+                        { id: '3', color: 'text-blue-500', shape: 'button-oval' },
+                        { id: '4', color: 'text-green-500', shape: 'button-square' },
+                        { id: 'q', color: 'bg-gray-100', shape: 'square' },
+                    ],
+                    options: [
+                        { id: 'opt1', color: 'text-blue-500', shape: 'button-oval' },
+                        { id: 'opt2', color: 'text-green-500', shape: 'button-square' },
+                        { id: 'opt3', color: 'text-blue-500', shape: 'button-round' },
+                    ]
+                },
+                {
+                    id: 't3',
+                    correctOptionId: 'opt2', // Up Up Down Up Up -> Down
+                    sequence: [
+                        { id: '1', color: 'text-green-500', shape: 'button-round-up' },
+                        { id: '2', color: 'text-green-500', shape: 'button-round-up' },
+                        { id: '3', color: 'text-green-500', shape: 'button-round-down' },
+                        { id: '4', color: 'text-green-500', shape: 'button-round-up' },
+                        { id: '5', color: 'text-green-500', shape: 'button-round-up' },
+                        { id: 'q', color: 'bg-gray-100', shape: 'square' },
+                    ],
+                    options: [
+                        { id: 'opt1', color: 'text-green-500', shape: 'button-round-up' },
+                        { id: 'opt2', color: 'text-green-500', shape: 'button-round-down' },
+                        { id: 'opt3', color: 'text-green-500', shape: 'button-square' },
+                    ]
+                },
+                {
+                    id: 't4',
+                    correctOptionId: 'opt2', 
+                    sequence: [
+                        { id: '1', color: 'text-orange-500', shape: 'button-square' },
+                        { id: '2', color: 'text-orange-500', shape: 'button-square' },
+                        { id: '3', color: 'text-blue-500', shape: 'button-round' },
+                        { id: '4', color: 'text-orange-500', shape: 'button-square' },
+                        { id: '5', color: 'text-orange-500', shape: 'button-square' },
+                        { id: 'q', color: 'bg-gray-100', shape: 'square' },
+                    ],
+                    options: [
+                        { id: 'opt1', color: 'text-orange-500', shape: 'button-square' },
+                        { id: 'opt2', color: 'text-blue-500', shape: 'button-round' },
+                        { id: 'opt3', color: 'text-blue-500', shape: 'button-oval' },
+                    ]
+                }
+            ]
+        },
+        {
+            id: 9,
+            type: GameType.PATTERN,
+            title: "Puntos y Flechas",
+            instruction: "Copia la serie según el modelo.",
+            patternTasks: [
+                {
+                    id: 't1',
+                    correctOptionId: 'opt1',
+                    sequence: [
+                        { id: '1', color: 'text-pink-500', shape: 'square-dot' },
+                        { id: '2', color: 'text-blue-500', shape: 'square-arrow' },
+                        { id: '3', color: 'text-pink-500', shape: 'square-dot' },
+                        { id: '4', color: 'text-blue-500', shape: 'square-arrow' },
+                        { id: 'q', color: 'bg-gray-100', shape: 'square' },
+                    ],
+                    options: [
+                        { id: 'opt1', color: 'text-pink-500', shape: 'square-dot' },
+                        { id: 'opt2', color: 'text-blue-500', shape: 'square-arrow' },
+                        { id: 'opt3', color: 'text-gray-400', shape: 'square' },
+                    ]
+                },
+                {
+                    id: 't2',
+                    correctOptionId: 'opt2',
+                    sequence: [
+                        { id: '1', color: 'text-orange-500', shape: 'square-arrow' },
+                        { id: '2', color: 'text-purple-500', shape: 'square-dot' },
+                        { id: '3', color: 'text-orange-500', shape: 'square-arrow' },
+                        { id: '4', color: 'text-purple-500', shape: 'square-dot' },
+                        { id: 'q', color: 'bg-gray-100', shape: 'square' },
+                    ],
+                    options: [
+                        { id: 'opt1', color: 'text-purple-500', shape: 'square-dot' },
+                        { id: 'opt2', color: 'text-orange-500', shape: 'square-arrow' },
+                        { id: 'opt3', color: 'text-orange-500', shape: 'square' },
+                    ]
+                },
+                {
+                    id: 't3',
+                    correctOptionId: 'opt1',
+                    sequence: [
+                        { id: '1', color: 'text-green-500', shape: 'square-arrow' },
+                        { id: '2', color: 'text-green-500', shape: 'square-arrow' },
+                        { id: '3', color: 'text-red-500', shape: 'square-dot' },
+                        { id: '4', color: 'text-green-500', shape: 'square-arrow' },
+                        { id: '5', color: 'text-green-500', shape: 'square-arrow' },
+                        { id: 'q', color: 'bg-gray-100', shape: 'square' },
+                    ],
+                    options: [
+                        { id: 'opt1', color: 'text-red-500', shape: 'square-dot' },
+                        { id: 'opt2', color: 'text-green-500', shape: 'square-arrow' },
+                        { id: 'opt3', color: 'text-blue-500', shape: 'square-dot' },
+                    ]
+                },
+                {
+                    id: 't4',
+                    correctOptionId: 'opt2',
+                    sequence: [
+                        { id: '1', color: 'text-blue-500', shape: 'square-dot' },
+                        { id: '2', color: 'text-yellow-500', shape: 'square-dot' },
+                        { id: '3', color: 'text-blue-500', shape: 'square-dot' },
+                        { id: '4', color: 'text-yellow-500', shape: 'square-dot' },
+                        { id: 'q', color: 'bg-gray-100', shape: 'square' },
+                    ],
+                    options: [
+                        { id: 'opt1', color: 'text-blue-500', shape: 'square-dot' },
+                        { id: 'opt2', color: 'text-blue-500', shape: 'square-dot' },
+                        { id: 'opt3', color: 'text-yellow-500', shape: 'square-arrow' },
+                    ]
+                }
+            ]
+        },
+        {
+            id: 10,
+            type: GameType.GRID_COPY,
+            title: "Copia el Patrón",
+            instruction: "Copia el patrón que se muestra arriba. ¡Solo es una línea!",
+            gridCopyTasks: [
+                {
+                    id: 'g1',
+                    rows: 8,
+                    cols: 8,
+                    instructionOverride: "Dibuja una línea horizontal",
+                    targetLines: [
+                        { start: {r: 3, c: 3}, end: {r: 3, c: 4} }
+                    ]
+                },
+                {
+                    id: 'g2',
+                    rows: 8,
+                    cols: 8,
+                    instructionOverride: "Dibuja una línea vertical",
+                    targetLines: [
+                        { start: {r: 2, c: 4}, end: {r: 3, c: 4} }
+                    ]
+                },
+                {
+                    id: 'g3',
+                    rows: 8,
+                    cols: 8,
+                    instructionOverride: "Dibuja una línea diagonal",
+                    targetLines: [
+                        { start: {r: 2, c: 2}, end: {r: 3, c: 3} }
+                    ]
+                },
+                {
+                    id: 'g4',
+                    rows: 8,
+                    cols: 8,
+                    instructionOverride: "Dibuja una línea más larga",
+                    targetLines: [
+                        { start: {r: 4, c: 2}, end: {r: 4, c: 5} }
+                    ]
+                }
+            ]
+        },
+        {
+            id: 11,
+            type: GameType.GRID_COPY,
+            title: "Figuras en la Cuadrícula",
+            instruction: "Copia la figura geométrica en la cuadrícula de abajo.",
+            gridCopyTasks: [
+                {
+                    id: 'g1',
+                    rows: 8,
+                    cols: 8,
+                    instructionOverride: "Dibuja un cuadrado",
+                    targetLines: [
+                        { start: {r: 2, c: 2}, end: {r: 2, c: 5} },
+                        { start: {r: 2, c: 5}, end: {r: 5, c: 5} },
+                        { start: {r: 5, c: 5}, end: {r: 5, c: 2} },
+                        { start: {r: 5, c: 2}, end: {r: 2, c: 2} }
+                    ]
+                },
+                {
+                    id: 'g2',
+                    rows: 8,
+                    cols: 8,
+                    instructionOverride: "Dibuja un triángulo",
+                    targetLines: [
+                        { start: {r: 2, c: 4}, end: {r: 6, c: 2} },
+                        { start: {r: 6, c: 2}, end: {r: 6, c: 6} },
+                        { start: {r: 6, c: 6}, end: {r: 2, c: 4} }
+                    ]
+                },
+                {
+                    id: 'g3',
+                    rows: 8,
+                    cols: 8,
+                    instructionOverride: "Dibuja un rectángulo",
+                    targetLines: [
+                        { start: {r: 3, c: 1}, end: {r: 3, c: 6} },
+                        { start: {r: 3, c: 6}, end: {r: 5, c: 6} },
+                        { start: {r: 5, c: 6}, end: {r: 5, c: 1} },
+                        { start: {r: 5, c: 1}, end: {r: 3, c: 1} }
+                    ]
+                },
+                {
+                    id: 'g4',
+                    rows: 8,
+                    cols: 8,
+                    instructionOverride: "Dibuja un rombo",
+                    targetLines: [
+                        { start: {r: 1, c: 4}, end: {r: 4, c: 7} },
+                        { start: {r: 4, c: 7}, end: {r: 7, c: 4} },
+                        { start: {r: 7, c: 4}, end: {r: 4, c: 1} },
+                        { start: {r: 4, c: 1}, end: {r: 1, c: 4} }
+                    ]
+                }
+            ]
+        },
+        {
+            id: 12,
+            type: GameType.GRID_COPY,
+            title: "Dibuja las Formas",
+            instruction: "Copia el dibujo en la cuadrícula de abajo.",
+            gridCopyTasks: [
+                {
+                    id: 'g1',
+                    rows: 8,
+                    cols: 8,
+                    instructionOverride: "Dibuja una cruz",
+                    targetLines: [
+                        { start: {r: 2, c: 2}, end: {r: 6, c: 6} },
+                        { start: {r: 2, c: 6}, end: {r: 6, c: 2} }
+                    ]
+                },
+                {
+                    id: 'g2',
+                    rows: 8,
+                    cols: 8,
+                    instructionOverride: "Dibuja un cuadrado pequeño",
+                    targetLines: [
+                        { start: {r: 3, c: 3}, end: {r: 3, c: 5} },
+                        { start: {r: 3, c: 5}, end: {r: 5, c: 5} },
+                        { start: {r: 5, c: 5}, end: {r: 5, c: 3} },
+                        { start: {r: 5, c: 3}, end: {r: 3, c: 3} }
+                    ]
+                },
+                {
+                    id: 'g3',
+                    rows: 8,
+                    cols: 8,
+                    instructionOverride: "Dibuja un cuadrado con cruz",
+                    targetLines: [
+                        // Outer box
+                        { start: {r: 1, c: 1}, end: {r: 1, c: 7} },
+                        { start: {r: 1, c: 7}, end: {r: 7, c: 7} },
+                        { start: {r: 7, c: 7}, end: {r: 7, c: 1} },
+                        { start: {r: 7, c: 1}, end: {r: 1, c: 1} },
+                        // X
+                        { start: {r: 1, c: 1}, end: {r: 7, c: 7} },
+                        { start: {r: 1, c: 7}, end: {r: 7, c: 1} }
+                    ]
+                },
+                {
+                    id: 'g4',
+                    rows: 8,
+                    cols: 8,
+                    instructionOverride: "Dibuja un cuadrado con centro",
+                    targetLines: [
+                        // Outer box
+                        { start: {r: 1, c: 1}, end: {r: 1, c: 7} },
+                        { start: {r: 1, c: 7}, end: {r: 7, c: 7} },
+                        { start: {r: 7, c: 7}, end: {r: 7, c: 1} },
+                        { start: {r: 7, c: 1}, end: {r: 1, c: 1} },
+                        // Inner box
+                        { start: {r: 3, c: 3}, end: {r: 3, c: 5} },
+                        { start: {r: 3, c: 5}, end: {r: 5, c: 5} },
+                        { start: {r: 5, c: 5}, end: {r: 5, c: 3} },
+                        { start: {r: 5, c: 3}, end: {r: 3, c: 3} }
+                    ]
+                }
+            ]
+        }
+    ];
+
+    // --- COMPONENTS ---
+
+    const ShapeIcon = ({ shape, className, content }) => {
+        const commonClasses = `w-full h-full ${className || ''}`;
+        
+        if (content) {
+            return (
+                <div className={`flex items-center justify-center font-bold text-4xl text-gray-700 ${className}`}>
+                    {content}
+                </div>
+            )
+        }
+
+        switch (shape) {
+            case 'circle': return <Icons.Circle className={commonClasses} fill="currentColor" />;
+            case 'square': return <Icons.Square className={commonClasses} fill="currentColor" />;
+            case 'triangle': return <Icons.Triangle className={commonClasses} fill="currentColor" />;
+            case 'star': return <Icons.Star className={commonClasses} fill="currentColor" />;
+            case 'heart': return <Icons.Heart className={commonClasses} fill="currentColor" />;
+            case 'diamond': return <Icons.Diamond className={commonClasses} fill="currentColor" />;
+            case 'flower': return <Icons.Flower className={commonClasses} fill="currentColor" />;
+            case 'cross': return <Icons.X className={commonClasses} strokeWidth={3} />;
+            case 'plus': return <Icons.Plus className={commonClasses} strokeWidth={3} />;
+            case 'hexagon': return <Icons.Hexagon className={commonClasses} fill="currentColor" />;
+            case 'moon': return <Icons.Moon className={commonClasses} fill="currentColor" />;
+            case 'sun': return <Icons.Sun className={commonClasses} fill="currentColor" />;
+            
+            case 'diagonal': 
+            return (
+                <svg viewBox="0 0 24 24" className={commonClasses} fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <line x1="4" y1="20" x2="20" y2="4" />
+                <circle cx="4" cy="20" r="2.5" fill="currentColor" stroke="none" />
+                <circle cx="20" cy="4" r="2.5" fill="currentColor" stroke="none" />
+                </svg>
+            );
+            case 'dash': 
+            return (
+                <svg viewBox="0 0 24 24" className={commonClasses} fill="currentColor">
+                <rect x="4" y="9" width="16" height="6" rx="1" />
+                </svg>
+            );
+
+            case 'button-round':
+            case 'button-round-up':
+            case 'button-round-down':
+            return (
+                <svg viewBox="0 0 24 24" className={commonClasses} fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10" />
+                <circle cx="12" cy="12" r="7" strokeWidth="1" opacity="0.5" />
+                <circle cx="9" cy="9" r="1.5" fill="currentColor" stroke="none" />
+                <circle cx="15" cy="9" r="1.5" fill="currentColor" stroke="none" />
+                <circle cx="9" cy="15" r="1.5" fill="currentColor" stroke="none" />
+                <circle cx="15" cy="15" r="1.5" fill="currentColor" stroke="none" />
+                
+                {shape === 'button-round' && <path d="M9 9 L15 15 M15 9 L9 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />}
+                {shape === 'button-round-up' && (
+                    <path d="M15 9 Q24 0 24 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" className="text-pink-500" />
+                )}
+                {shape === 'button-round-up' && (
+                    <path d="M9 9 L15 15 M15 9 L9 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.5" />
+                )}
+                {shape === 'button-round-down' && (
+                    <path d="M15 15 Q24 24 24 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" className="text-pink-500" />
+                )}
+                </svg>
+            );
+            case 'button-oval':
+            return (
+                <svg viewBox="0 0 24 24" className={commonClasses} fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="2" y="6" width="20" height="12" rx="6" />
+                <rect x="4" y="8" width="16" height="8" rx="4" strokeWidth="1" opacity="0.5" />
+                <circle cx="8" cy="12" r="1.5" fill="currentColor" stroke="none" />
+                <circle cx="16" cy="12" r="1.5" fill="currentColor" stroke="none" />
+                <line x1="8" y1="12" x2="16" y2="12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+            );
+            case 'button-square':
+            return (
+                <svg viewBox="0 0 24 24" className={commonClasses} fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="3" y="3" width="18" height="18" rx="4" />
+                <rect x="5" y="5" width="14" height="14" rx="3" strokeWidth="1" opacity="0.5" />
+                <circle cx="9" cy="9" r="1.5" fill="currentColor" stroke="none" />
+                <circle cx="15" cy="9" r="1.5" fill="currentColor" stroke="none" />
+                <circle cx="9" cy="15" r="1.5" fill="currentColor" stroke="none" />
+                <circle cx="15" cy="15" r="1.5" fill="currentColor" stroke="none" />
+                <line x1="9" y1="9" x2="15" y2="9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                <line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+            );
+
+            case 'square-dot':
+            return (
+                <svg viewBox="0 0 24 24" className={commonClasses} fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="2" y="2" width="20" height="20" />
+                <circle cx="12" cy="12" r="4" fill="currentColor" stroke="none" />
+                </svg>
+            );
+            case 'square-arrow':
+            return (
+                <svg viewBox="0 0 24 24" className={commonClasses} fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="2" y="2" width="20" height="20" />
+                <path d="M18 6 L6 18" strokeWidth="2.5" strokeLinecap="round" />
+                <path d="M6 18 L6 10 M6 18 L14 18" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+            );
+            
+            case 'arrow-tr-bl':
+            return (
+                <svg viewBox="0 0 24 24" className={commonClasses} fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="2" y="2" width="20" height="20" strokeWidth="1" opacity="0.2" />
+                <circle cx="18" cy="6" r="2" fill="currentColor" stroke="none" />
+                <circle cx="6" cy="18" r="2" fill="currentColor" stroke="none" />
+                <path d="M18 6 L6 18" strokeWidth="2.5" strokeLinecap="round" />
+                <path d="M6 18 L6 10 M6 18 L14 18" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+            );
+            case 'arrow-tl-br':
+            return (
+                <svg viewBox="0 0 24 24" className={commonClasses} fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="2" y="2" width="20" height="20" strokeWidth="1" opacity="0.2" />
+                <circle cx="6" cy="6" r="2" fill="currentColor" stroke="none" />
+                <circle cx="18" cy="18" r="2" fill="currentColor" stroke="none" />
+                <path d="M6 6 L18 18" strokeWidth="2.5" strokeLinecap="round" />
+                <path d="M18 18 L10 18 M18 18 L18 10" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+            );
+            case 'arrow-bl-tr':
+            return (
+                <svg viewBox="0 0 24 24" className={commonClasses} fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="2" y="2" width="20" height="20" strokeWidth="1" opacity="0.2" />
+                <circle cx="6" cy="18" r="2" fill="currentColor" stroke="none" />
+                <circle cx="18" cy="6" r="2" fill="currentColor" stroke="none" />
+                <path d="M6 18 L18 6" strokeWidth="2.5" strokeLinecap="round" />
+                <path d="M18 6 L10 6 M18 6 L18 14" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+            );
+            case 'arrow-br-tl':
+            return (
+                <svg viewBox="0 0 24 24" className={commonClasses} fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="2" y="2" width="20" height="20" strokeWidth="1" opacity="0.2" />
+                <circle cx="18" cy="18" r="2" fill="currentColor" stroke="none" />
+                <circle cx="6" cy="6" r="2" fill="currentColor" stroke="none" />
+                <path d="M18 18 L6 6" strokeWidth="2.5" strokeLinecap="round" />
+                <path d="M6 6 L14 6 M6 6 L6 14" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+            );
+            
+            case 'square-x':
+            return (
+                <svg viewBox="0 0 24 24" className={commonClasses} fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="2" y="2" width="20" height="20" />
+                <line x1="2" y1="2" x2="22" y2="22" />
+                <line x1="22" y1="2" x2="2" y2="22" />
+                </svg>
+            );
+            case 'square-box':
+            return (
+                <svg viewBox="0 0 24 24" className={commonClasses} fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="2" y="2" width="20" height="20" />
+                <rect x="8" y="8" width="8" height="8" fill="currentColor" stroke="none" />
+                </svg>
+            );
+
+            default: return <Icons.Circle className={commonClasses} />;
+        }
+    };
+
+    const PatternGame = ({ level, onComplete, onSpeak, childName }) => {
+        const [taskIndex, setTaskIndex] = useState(0);
+        const [selectedOption, setSelectedOption] = useState(null);
+        const [feedback, setFeedback] = useState(null);
+
+        const tasks = level.patternTasks || [];
+        const currentTask = tasks[taskIndex];
+
+        if (!currentTask) return <div>No tasks loaded</div>;
+
+        const handleSelect = (option) => {
+            if (feedback === 'correct') return;
+            
+            setSelectedOption(option.id);
+            const isCorrect = option.id === currentTask.correctOptionId;
+
+            if (isCorrect) {
+            setFeedback('correct');
+            onSpeak(`¡Muy bien, ${childName}!`);
+            setTimeout(() => {
+                if (taskIndex < tasks.length - 1) {
+                    setTaskIndex(prev => prev + 1);
+                    setFeedback(null);
+                    setSelectedOption(null);
+                    onSpeak("Siguiente ejercicio");
+                } else {
+                    onComplete();
+                }
+            }, 1500);
+            } else {
+            setFeedback('incorrect');
+            onSpeak("Intenta de nuevo");
+            setTimeout(() => {
+                setFeedback(null);
+                setSelectedOption(null);
+            }, 1000);
+            }
+        };
+
+        return (
+            <div className="flex flex-col items-center justify-center w-full max-w-4xl mx-auto p-4">
+            
+            <div className="mb-4 text-orange-400 font-bold text-lg">
+                Ejercicio {taskIndex + 1} de {tasks.length}
+            </div>
+
+            <div className="flex flex-wrap items-center justify-center gap-4 mb-12 p-6 bg-white rounded-xl shadow-lg border-4 border-orange-200">
+                {currentTask.sequence?.map((item, index) => {
+                const isQuestion = item.id === 'q';
+                const displayItem = (feedback === 'correct' && isQuestion && selectedOption) 
+                    ? currentTask.options?.find(o => o.id === selectedOption) || item
+                    : item;
+
+                const isLineShape = [
+                    'diagonal', 'dash', 'button-round', 'button-oval', 'button-square', 
+                    'button-round-up', 'button-round-down', 'square-dot', 'square-arrow',
+                    'cross', 'plus', 'hexagon'
+                ].includes(displayItem.shape) || (displayItem.shape === 'square' && displayItem.color.startsWith('text-'));
+
+                return (
+                    <div 
+                    key={index} 
+                    className={`
+                        w-16 h-16 md:w-24 md:h-24 flex items-center justify-center rounded-lg shadow-sm transition-all
+                        ${displayItem.color.startsWith('bg-') ? displayItem.color : 'bg-white border-2 border-gray-300'}
+                        ${isQuestion ? 'border-4 border-dashed border-gray-400 bg-gray-100' : ''}
+                    `}
+                    >
+                    {isQuestion && !feedback ? (
+                        <span className="text-4xl text-gray-400 font-bold">?</span>
+                    ) : (
+                        <div className={`w-10 h-10 md:w-16 md:h-16 ${
+                            displayItem.shape === 'square' || displayItem.shape === 'diamond' || isLineShape 
+                            ? displayItem.color.startsWith('text-') ? displayItem.color : 'text-transparent' 
+                            : 'text-white'
+                        }`}>
+                            <ShapeIcon shape={displayItem.shape} content={displayItem.content} />
+                        </div>
+                    )}
+                    </div>
+                );
+                })}
+            </div>
+
+            <div className="grid grid-cols-3 gap-6">
+                {currentTask.options?.map((option) => {
+                    const isLineShape = [
+                        'diagonal', 'dash', 'button-round', 'button-oval', 'button-square', 
+                        'button-round-up', 'button-round-down', 'square-dot', 'square-arrow',
+                        'cross', 'plus', 'hexagon'
+                    ].includes(option.shape) || (option.shape === 'square' && option.color.startsWith('text-'));
+                    
+                    return (
+                    <button
+                        key={option.id}
+                        onClick={() => handleSelect(option)}
+                        className={`
+                        w-20 h-20 md:w-28 md:h-28 flex items-center justify-center rounded-xl shadow-md border-b-4 transition-transform hover:scale-105 active:scale-95
+                        ${option.color.startsWith('bg-') ? option.color : 'bg-white border-2 border-gray-300'}
+                        border-black/20
+                        `}
+                    >
+                        <div className={`w-12 h-12 md:w-16 md:h-16 ${
+                            option.shape === 'square' || option.shape === 'diamond' || isLineShape
+                            ? option.color.startsWith('text-') ? option.color : 'text-transparent'
+                            : 'text-white'
+                        }`}>
+                            <ShapeIcon shape={option.shape} content={option.content} />
+                        </div>
+                    </button>
+                    )
+                })}
+            </div>
+
+            {feedback && (
+                <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-50">
+                <div className={`
+                    p-6 rounded-full shadow-2xl transform scale-150 animate-bounce-small
+                    ${feedback === 'correct' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}
+                `}>
+                    {feedback === 'correct' ? <Icons.CheckCircle2 size={64} /> : <Icons.XCircle size={64} />}
+                </div>
+                </div>
+            )}
+            </div>
+        );
+    };
+
+    const SelectionGame = ({ level, onComplete, onSpeak, childName }) => {
+        const [taskIndex, setTaskIndex] = useState(0);
+        const [foundIds, setFoundIds] = useState([]);
+        
+        const tasks = level.selectionTasks || [];
+        const currentTask = tasks[taskIndex];
+
+        const totalCorrect = currentTask?.items.filter(i => i.isCorrect).length || 0;
+
+        useEffect(() => {
+            if (foundIds.length > 0 && foundIds.length === totalCorrect) {
+            onSpeak(`¡Excelente trabajo, ${childName}!`);
+            setTimeout(() => {
+                if (taskIndex < tasks.length - 1) {
+                    setTaskIndex(prev => prev + 1);
+                    setFoundIds([]);
+                } else {
+                    onComplete();
+                }
+            }, 1500);
+            }
+        }, [foundIds, totalCorrect, onComplete, taskIndex, tasks.length, childName, onSpeak]);
+
+        if (!currentTask) return <div>No tasks loaded</div>;
+
+        const handleItemClick = (id, isCorrect) => {
+            if (foundIds.includes(id)) return;
+
+            if (isCorrect) {
+            setFoundIds(prev => [...prev, id]);
+            onSpeak("¡Encontrado!");
+            } else {
+            onSpeak("Intenta de nuevo");
+            }
+        };
+
+        const renderIcon = (type, className) => {
+            switch (type) {
+            case 'triangle': return <Icons.Triangle className={className} fill="currentColor" />;
+            case 'square': return <Icons.Square className={className} fill="currentColor" />;
+            case 'circle': return <Icons.Circle className={className} fill="currentColor" />;
+            case 'star': return <Icons.Star className={className} fill="currentColor" />;
+            case 'heart': return <Icons.Heart className={className} fill="currentColor" />;
+            case 'balloon': return <div className={`${className} rounded-full bg-current`} style={{ borderRadius: '50% 50% 50% 0' }} />;
+            default: return <Icons.Circle className={className} />;
+            }
+        };
+
+        return (
+            <div className="w-full max-w-2xl mx-auto p-4">
+            <div className="mb-4 text-center text-orange-400 font-bold text-lg">
+                Ejercicio {taskIndex + 1} de {tasks.length}
+            </div>
+            
+            {currentTask.instructionOverride && (
+                <p className="text-center text-gray-600 mb-4 font-semibold">{currentTask.instructionOverride}</p>
+            )}
+
+            <div className="flex justify-between items-center mb-6">
+                <div className="bg-white px-4 py-2 rounded-full shadow border-2 border-orange-300">
+                <span className="text-orange-600 font-bold">Encontrados: {foundIds.length} / {totalCorrect}</span>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-8 place-items-center">
+                {currentTask.items.map((item) => {
+                    const isFound = foundIds.includes(item.id);
+                    const scale = item.scale || 1;
+                    
+                    return (
+                        <button
+                            key={item.id}
+                            onClick={() => handleItemClick(item.id, item.isCorrect)}
+                            style={{ transform: `scale(${scale})` }}
+                            className={`
+                                p-4 rounded-xl transition-all duration-300 relative
+                                ${isFound ? 'bg-green-100 ring-4 ring-green-400' : 'hover:bg-white/50'}
+                            `}
+                        >
+                            <div className={`${item.color} w-20 h-20`}>
+                                {renderIcon(item.icon, "w-full h-full")}
+                            </div>
+                            {isFound && (
+                                <div className="absolute -top-2 -right-2 bg-green-500 text-white rounded-full p-1 animate-bounce">
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                                </div>
+                            )}
+                        </button>
+                    )
+                })}
+            </div>
+            </div>
+        );
+    };
+
+    const MazeGame = ({ level, onComplete, onSpeak, childName }) => {
+        const [taskIndex, setTaskIndex] = useState(0);
+        const tasks = level.mazeTasks || [];
+        const currentTask = tasks[taskIndex];
+        
+        const [pos, setPos] = useState({ r: 0, c: 0 });
+
+        useEffect(() => {
+            if (currentTask) {
+                setPos(currentTask.grid.start);
+            }
+        }, [currentTask]);
+
+        if (!currentTask) return <div>No maze data</div>;
+
+        const move = (dr, dc) => {
+            const { grid } = currentTask;
+            const newR = pos.r + dr;
+            const newC = pos.c + dc;
+
+            if (newR < 0 || newR >= grid.rows || newC < 0 || newC >= grid.cols) return;
+            if (grid.layout[newR][newC] === 1) return;
+
+            setPos({ r: newR, c: newC });
+
+            if (grid.layout[newR][newC] === 3) {
+            onSpeak(`¡Llegaste a la meta, ${childName}!`);
+            setTimeout(() => {
+                if (taskIndex < tasks.length - 1) {
+                    setTaskIndex(prev => prev + 1);
+                    onSpeak("Siguiente laberinto");
+                } else {
+                    onComplete();
+                }
+            }, 1000);
+            }
+        };
+
+        return (
+            <div className="flex flex-col items-center gap-6" tabIndex={0} onKeyDown={(e) => {
+                if(e.key === 'ArrowUp') move(-1, 0);
+                if(e.key === 'ArrowDown') move(1, 0);
+                if(e.key === 'ArrowLeft') move(0, -1);
+                if(e.key === 'ArrowRight') move(0, 1);
+            }}>
+            
+            <div className="mb-2 text-orange-400 font-bold text-lg">
+                Laberinto {taskIndex + 1} de {tasks.length}
+            </div>
+
+            <div 
+                className="grid bg-orange-100 border-4 border-orange-400 p-2 rounded-lg shadow-xl"
+                style={{ 
+                    gridTemplateColumns: `repeat(${currentTask.grid.cols}, minmax(0, 1fr))` 
+                }}
+            >
+                {currentTask.grid.layout.map((row, r) => (
+                row.map((cell, c) => {
+                    const isPlayer = pos.r === r && pos.c === c;
+                    const isWall = cell === 1;
+                    const isGoal = cell === 3;
+
+                    return (
+                    <div 
+                        key={`${r}-${c}`} 
+                        className={`
+                        w-12 h-12 md:w-16 md:h-16 flex items-center justify-center
+                        ${isWall ? 'bg-orange-800 rounded-sm' : 'bg-orange-100'}
+                        `}
+                    >
+                        {isGoal && <Icons.Cookie className="text-yellow-600 animate-pulse" size={32} />}
+                        {isPlayer && <Icons.Rat className="text-gray-700 transition-all duration-200" size={36} />}
+                    </div>
+                    );
+                })
+                ))}
+            </div>
+
+            <div className="grid grid-cols-3 gap-2 mt-4 md:hidden">
+                <div />
+                <button onClick={() => move(-1, 0)} className="bg-orange-400 p-4 rounded-full text-white active:bg-orange-600 shadow-md">
+                    <Icons.ChevronUp size={32} />
+                </button>
+                <div />
+                <button onClick={() => move(0, -1)} className="bg-orange-400 p-4 rounded-full text-white active:bg-orange-600 shadow-md">
+                    <Icons.ChevronLeft size={32} />
+                </button>
+                <div />
+                <button onClick={() => move(0, 1)} className="bg-orange-400 p-4 rounded-full text-white active:bg-orange-600 shadow-md">
+                    <Icons.ChevronRight size={32} />
+                </button>
+                <div />
+                <button onClick={() => move(1, 0)} className="bg-orange-400 p-4 rounded-full text-white active:bg-orange-600 shadow-md">
+                    <Icons.ChevronDown size={32} />
+                </button>
+                <div />
+            </div>
+
+            <p className="text-orange-800/60 text-sm hidden md:block">Usa las flechas del teclado</p>
+            </div>
+        );
+    };
+
+    const GridCopyGame = ({ level, onComplete, onSpeak, childName }) => {
+        const [taskIndex, setTaskIndex] = useState(0);
+        const tasks = level.gridCopyTasks || [];
+        const currentTask = tasks[taskIndex];
+        
+        const [userLines, setUserLines] = useState([]);
+        const [isDrawing, setIsDrawing] = useState(false);
+        const [startPoint, setStartPoint] = useState(null);
+        const [currentDragPos, setCurrentDragPos] = useState(null);
+        
+        const svgRef = useRef(null);
+
+        useEffect(() => {
+            setUserLines([]);
+            setStartPoint(null);
+            setCurrentDragPos(null);
+            setIsDrawing(false);
+        }, [taskIndex]);
+
+        if (!currentTask) return <div>No tasks</div>;
+
+        const GRID_SIZE = 30;
+        const DOT_RADIUS = 4;
+        const TOUCH_RADIUS = 20; 
+        const WIDTH = (currentTask.cols - 1) * GRID_SIZE + 40;
+        const HEIGHT = (currentTask.rows - 1) * GRID_SIZE + 40;
+
+        const getCoordinates = (r, c) => ({
+            x: c * GRID_SIZE + 20,
+            y: r * GRID_SIZE + 20
+        });
+
+        const getPointFromEvent = (e) => {
+            if (!svgRef.current) return null;
+            const rect = svgRef.current.getBoundingClientRect();
+            
+            let clientX, clientY;
+
+            if (e.changedTouches) {
+                clientX = e.changedTouches[0].clientX;
+                clientY = e.changedTouches[0].clientY;
+            } else if (e.touches) {
+                if (e.touches.length === 0) return null;
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+            
+            return {
+                x: clientX - rect.left,
+                y: clientY - rect.top
+            };
+        };
+
+        const getNearestDot = (x, y) => {
+            const col = Math.round((x - 20) / GRID_SIZE);
+            const row = Math.round((y - 20) / GRID_SIZE);
+            
+            if (col >= 0 && col < currentTask.cols && row >= 0 && row < currentTask.rows) {
+                return { r: row, c: col };
+            }
+            return null;
+        };
+
+        const handleStart = (r, c, e) => {
+            e.preventDefault(); 
+            
+            if (currentTask.targetLines.length === 1 && userLines.length > 0) {
+                setUserLines([]);
+            }
+            
+            setIsDrawing(true);
+            setStartPoint({ r, c });
+            const point = getCoordinates(r, c);
+            setCurrentDragPos(point);
+        };
+
+        const handleMove = (e) => {
+            if (!isDrawing) return;
+            const pos = getPointFromEvent(e);
+            if (pos) setCurrentDragPos(pos);
+        };
+
+        const handleEnd = (e) => {
+            if (!isDrawing || !startPoint) return;
+            
+            const pos = getPointFromEvent(e);
+            const finalPos = pos || currentDragPos;
+            
+            if (finalPos) {
+                const endDot = getNearestDot(finalPos.x, finalPos.y);
+                
+                if (endDot && (endDot.r !== startPoint.r || endDot.c !== startPoint.c)) {
+                    const exists = userLines.some(l => 
+                        (l.start.r === startPoint.r && l.start.c === startPoint.c && l.end.r === endDot.r && l.end.c === endDot.c) ||
+                        (l.start.r === endDot.r && l.start.c === endDot.c && l.end.r === startPoint.r && l.end.c === startPoint.c)
+                    );
+
+                    if (!exists) {
+                        const newLine = { start: startPoint, end: endDot, color: 'stroke-blue-500' };
+                        const newLines = [...userLines, newLine];
+                        setUserLines(newLines);
+                        checkCompletion(newLines);
+                    }
+                }
+            }
+            
+            setIsDrawing(false);
+            setStartPoint(null);
+            setCurrentDragPos(null);
+        };
+
+        const checkCompletion = (lines) => {
+            // Simplified check: Does the user lines contain ALL target lines? 
+            // We allow extra lines (drawing mistakes) so the child doesn't get stuck.
+            
+            const allTargetsMet = currentTask.targetLines.every(target => {
+                return lines.some(user => {
+                    const matchNormal = (user.start.r === target.start.r && user.start.c === target.start.c && user.end.r === target.end.r && user.end.c === target.end.c);
+                    const matchReverse = (user.start.r === target.end.r && user.start.c === target.end.c && user.end.r === target.start.r && user.end.c === target.start.c);
+                    return matchNormal || matchReverse;
+                });
+            });
+
+            if (allTargetsMet) {
+                onSpeak(`¡Perfecto, ${childName}!`);
+                setTimeout(() => {
+                    if (taskIndex < tasks.length - 1) {
+                        setTaskIndex(prev => prev + 1);
+                        onSpeak("Siguiente dibujo");
+                    } else {
+                        onComplete();
+                    }
+                }, 1500);
+            }
+        };
+
+        const reset = () => {
+            setUserLines([]);
+        };
+
+        const renderGrid = (lines, isInteractive) => (
+            <div className={`relative bg-white rounded-xl shadow-md border-4 ${isInteractive ? 'border-blue-200' : 'border-gray-200'} p-4 select-none`}>
+                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-white px-2 text-sm font-bold text-gray-500">
+                    {isInteractive ? "TÚ" : "MODELO"}
+                </div>
+
+                <svg 
+                    ref={isInteractive ? svgRef : undefined}
+                    width={WIDTH} 
+                    height={HEIGHT} 
+                    className={isInteractive ? "touch-none cursor-crosshair" : "pointer-events-none"}
+                    onMouseMove={isInteractive ? handleMove : undefined}
+                    onTouchMove={isInteractive ? handleMove : undefined}
+                    onMouseUp={isInteractive ? handleEnd : undefined}
+                    onTouchEnd={isInteractive ? handleEnd : undefined}
+                    onMouseLeave={isInteractive ? () => { if(isDrawing) setIsDrawing(false); } : undefined}
+                >
+                    {Array.from({ length: currentTask.rows }).map((_, r) => 
+                        Array.from({ length: currentTask.cols }).map((_, c) => {
+                            const { x, y } = getCoordinates(r, c);
+                            return (
+                                <g key={`${r}-${c}`}>
+                                    <circle 
+                                        cx={x} 
+                                        cy={y} 
+                                        r={DOT_RADIUS} 
+                                        className="text-gray-400 fill-current" 
+                                    />
+                                    {isInteractive && (
+                                        <circle 
+                                            cx={x} 
+                                            cy={y} 
+                                            r={TOUCH_RADIUS} 
+                                            fill="transparent"
+                                            className="cursor-pointer"
+                                            onMouseDown={(e) => handleStart(r, c, e)}
+                                            onTouchStart={(e) => handleStart(r, c, e)}
+                                        />
+                                    )}
+                                </g>
+                            );
+                        })
+                    )}
+
+                    {lines.map((line, i) => {
+                        const start = getCoordinates(line.start.r, line.start.c);
+                        const end = getCoordinates(line.end.r, line.end.c);
+                        return (
+                            <line 
+                                key={i} 
+                                x1={start.x} y1={start.y} 
+                                x2={end.x} y2={end.y} 
+                                strokeWidth="4" 
+                                strokeLinecap="round"
+                                className={isInteractive ? "stroke-blue-500" : "stroke-red-500"} 
+                            />
+                        );
+                    })}
+
+                    {isDrawing && startPoint && currentDragPos && (
+                        <line 
+                            x1={getCoordinates(startPoint.r, startPoint.c).x} 
+                            y1={getCoordinates(startPoint.r, startPoint.c).y} 
+                            x2={currentDragPos.x} 
+                            y2={currentDragPos.y} 
+                            strokeWidth="4" 
+                            strokeLinecap="round"
+                            className="stroke-blue-400 stroke-dashed opacity-70 pointer-events-none"
+                        />
+                    )}
+                </svg>
+            </div>
+        );
+
+        return (
+            <div className="flex flex-col items-center w-full max-w-lg mx-auto p-4 gap-6">
+            
+                <div className="text-orange-400 font-bold text-lg mb-2">
+                    Ejercicio {taskIndex + 1} de {tasks.length}
+                </div>
+
+                {currentTask.instructionOverride && (
+                    <p className="text-center text-gray-600 font-medium animate-bounce-small">{currentTask.instructionOverride}</p>
+                )}
+
+                {renderGrid(currentTask.targetLines, false)}
+
+                <div className="relative">
+                    {renderGrid(userLines, true)}
+                    <button 
+                        onClick={reset}
+                        className="absolute -right-12 top-1/2 transform -translate-y-1/2 p-2 bg-gray-100 rounded-full hover:bg-gray-200 text-gray-600 shadow-sm transition-colors"
+                        title="Borrar todo"
+                    >
+                        <Icons.RefreshCw size={24} />
+                    </button>
+                </div>
+
+                <p className="text-sm text-gray-400 text-center animate-pulse">
+                    {isDrawing ? "Suelta para conectar" : "Toca un punto y arrastra"}
+                </p>
+
+            </div>
+        );
+    };
+
+    const App = () => {
+      const [gameState, setGameState] = useState({
+        childName: '',
+        currentLevelId: null,
+        completedLevels: [],
+        score: 0,
+      });
+      
+      const [tempName, setTempName] = useState('');
+
+      const currentLevel = LEVELS.find(l => l.id === gameState.currentLevelId);
+
+      const speakText = useCallback((text) => {
+        if (!window.speechSynthesis) return;
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'es-ES';
+        utterance.rate = 0.9;
+        utterance.pitch = 1.1;
+        window.speechSynthesis.speak(utterance);
+      }, []);
+
+      useEffect(() => {
+        if (currentLevel) {
+            const timer = setTimeout(() => {
+                speakText(currentLevel.instruction);
+            }, 500);
+            return () => clearTimeout(timer);
+        }
+      }, [currentLevel, speakText]);
+
+      const handleNameSubmit = (e) => {
+        e.preventDefault();
+        if (tempName.trim()) {
+            setGameState(prev => ({ ...prev, childName: tempName.trim() }));
+            speakText(`Hola ${tempName}, ¡bienvenido a Veo Veo!`);
+        }
+      };
+
+      const handleLevelSelect = (id) => {
+        setGameState(prev => ({ ...prev, currentLevelId: id }));
+      };
+
+      const handleLevelComplete = () => {
+        speakText(`¡Felicidades ${gameState.childName}, completaste el nivel!`);
+        if (gameState.currentLevelId && !gameState.completedLevels.includes(gameState.currentLevelId)) {
+            setGameState(prev => ({
+                ...prev,
+                completedLevels: [...prev.completedLevels, prev.currentLevelId],
+                score: prev.score + 100,
+                currentLevelId: null
+            }));
+        } else {
+            setGameState(prev => ({ ...prev, currentLevelId: null }));
+        }
+      };
+
+      const handleBack = () => {
+        setGameState(prev => ({ ...prev, currentLevelId: null }));
+      };
+
+      const renderGame = () => {
+        if (!currentLevel) return null;
+        
+        const commonProps = {
+            level: currentLevel,
+            onComplete: handleLevelComplete,
+            onSpeak: speakText,
+            childName: gameState.childName
+        };
+
+        switch (currentLevel.type) {
+          case GameType.PATTERN: return <PatternGame {...commonProps} />;
+          case GameType.SELECTION: return <SelectionGame {...commonProps} />;
+          case GameType.MAZE: return <MazeGame {...commonProps} />;
+          case GameType.GRID_COPY: return <GridCopyGame {...commonProps} />;
+          default: return <div>Juego no implementado</div>;
+        }
+      };
+
+      if (!gameState.childName) {
+          return (
+            <div className="min-h-screen bg-yellow-50 flex flex-col items-center justify-center p-4">
+                <div className="bg-white p-8 rounded-2xl shadow-xl border-4 border-yellow-300 max-w-md w-full text-center">
+                    <h1 className="text-5xl font-bold text-pink-500 mb-6 drop-shadow-sm">¡Hola!</h1>
+                    <p className="text-xl text-gray-600 mb-6">¿Cómo te llamas?</p>
+                    <form onSubmit={handleNameSubmit} className="flex flex-col gap-4">
+                        <input 
+                            type="text" 
+                            value={tempName}
+                            onChange={(e) => setTempName(e.target.value)}
+                            placeholder="Escribe tu nombre aquí"
+                            className="p-4 text-center text-2xl border-2 border-orange-200 rounded-xl focus:outline-none focus:border-orange-400 placeholder:text-gray-300"
+                            autoFocus
+                        />
+                        <button 
+                            type="submit"
+                            disabled={!tempName.trim()}
+                            className="bg-green-400 text-white text-xl font-bold py-4 rounded-xl shadow-md hover:bg-green-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            Comenzar a Jugar
+                        </button>
+                    </form>
+                </div>
+            </div>
+          )
+      }
+
+      if (!gameState.currentLevelId) {
+        return (
+          <div className="min-h-screen bg-yellow-50 p-4 md:p-8 flex flex-col items-center">
+            <header className="mb-8 text-center">
+                <h1 className="text-5xl md:text-6xl font-bold text-pink-500 drop-shadow-md mb-2">Veo, veo</h1>
+                <h2 className="text-3xl md:text-4xl font-bold text-orange-400">inicial 3</h2>
+                <div className="mt-4 bg-white/50 px-6 py-2 rounded-full inline-block">
+                    <p className="text-xl text-sky-600 font-bold">Hola, {gameState.childName}</p>
+                </div>
+            </header>
+
+            <div className="bg-white p-4 rounded-2xl shadow-sm border-2 border-yellow-200 mb-8 flex items-center gap-2">
+                <Icons.Star className="text-yellow-400 fill-yellow-400" />
+                <span className="text-xl font-bold text-gray-700">Puntos: {gameState.score}</span>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 w-full max-w-4xl">
+                {LEVELS.map((level) => {
+                    const isCompleted = gameState.completedLevels.includes(level.id);
+                    return (
+                        <button
+                            key={level.id}
+                            onClick={() => handleLevelSelect(level.id)}
+                            className={`
+                                aspect-square rounded-2xl p-4 flex flex-col items-center justify-between shadow-md transition-all
+                                border-b-4 
+                                ${isCompleted 
+                                        ? 'bg-green-100 border-green-400 text-green-700 hover:translate-y-1' 
+                                        : 'bg-white border-pink-300 text-pink-500 hover:-translate-y-1 hover:shadow-lg'
+                                }
+                            `}
+                        >
+                            <div className="text-3xl font-bold">{level.id}</div>
+                            <div className="flex-1 flex items-center justify-center">
+                                {isCompleted ? <Icons.Star size={40} className="fill-green-500" /> : <Icons.Play size={40} className="fill-pink-200" />}
+                            </div>
+                            <div className="text-sm font-semibold text-center leading-tight">{level.title}</div>
+                        </button>
+                    )
+                })}
+            </div>
+          </div>
+        );
+      }
+
+      return (
+        <div className="min-h-screen bg-sky-50 flex flex-col">
+            <nav className="bg-white p-4 shadow-sm border-b-2 border-sky-100 flex justify-between items-center z-10">
+                <button 
+                    onClick={handleBack}
+                    className="flex items-center gap-2 text-sky-600 font-bold hover:bg-sky-50 px-3 py-1 rounded-lg transition-colors"
+                >
+                    <Icons.Home size={24} />
+                    <span className="hidden md:inline">Menú</span>
+                </button>
+                <h2 className="text-xl md:text-2xl font-bold text-sky-800 text-center truncate px-4">
+                    {currentLevel?.title}
+                </h2>
+                <div className="flex gap-2">
+                    <button 
+                        onClick={() => speakText(currentLevel?.instruction || '')}
+                        className="p-2 text-orange-400 hover:text-orange-600 rounded-full hover:bg-orange-50 bg-orange-50 border border-orange-200"
+                    >
+                        <Icons.Volume2 size={24} />
+                    </button>
+                    <button 
+                        onClick={() => setGameState(prev => ({...prev, currentLevelId: prev.currentLevelId}))} 
+                        className="p-2 text-gray-400 hover:text-sky-600 rounded-full hover:bg-sky-50"
+                    >
+                        <Icons.RotateCcw size={24} />
+                    </button>
+                </div>
+            </nav>
+
+            <div className="bg-yellow-100 p-4 text-center border-b border-yellow-200">
+                <p className="text-lg text-yellow-800 font-medium">
+                    {currentLevel?.instruction}
+                </p>
+            </div>
+
+            <main className="flex-1 flex flex-col items-center justify-start p-4 relative overflow-hidden">
+                 <div className="w-full max-w-4xl px-4 mb-6 mt-2 flex justify-between items-end select-none pointer-events-none opacity-80 z-10">
+                    <div className="flex flex-col gap-1">
+                        <div className="flex gap-4 text-orange-400 text-sm font-bold ml-1">
+                            <span>Día</span>
+                            <span>Mes</span>
+                            <span>Año</span>
+                        </div>
+                        <div className="flex gap-2">
+                            <div className="w-12 h-8 border-2 border-orange-300 rounded-full bg-white/60"></div>
+                            <div className="w-12 h-8 border-2 border-orange-300 rounded-full bg-white/60"></div>
+                            <div className="w-12 h-8 border-2 border-orange-300 rounded-full bg-white/60"></div>
+                        </div>
+                    </div>
+                    <div className="text-orange-300 transform -rotate-12 pb-2 pr-2">
+                        <Icons.PenTool size={48} className="fill-orange-100" />
+                    </div>
+                 </div>
+
+                 <div className="z-10 w-full flex-1 flex flex-col justify-center">
+                    {renderGame()}
+                 </div>
+            </main>
+        </div>
+      );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+<script type="module" src="/index.tsx"></script>
 </body>
 </html>
